@@ -40,7 +40,7 @@ class DataController(BaseController):
                                 project_path,
                                 random_key +'_'+cleaned_file_name
                                        )
-        return random_name
+        return random_name , random_key +'_'+cleaned_file_name
             
         
         
