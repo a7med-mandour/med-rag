@@ -72,6 +72,7 @@ async def data_processing(request:Request,project_id:str, process_request:DataSc
     file_id = process_request.file_id
     chunk_size = process_request.chunk_size
     overlap = process_request.overlap
+    do_reset = process_request.do_reset
 
     project_model = ProjectModel(db_client=request.app.db_client)
     project = await project_model.get_project_or_create_one(project_id=project_id)
@@ -110,6 +111,15 @@ async def data_processing(request:Request,project_id:str, process_request:DataSc
 
     chunk_model = TextChunkModel(db_client=request.app.db_client)
 
+    if do_reset == 1:
+        _ = await chunk_model.do_reset_by_project_id(project_id=project.id)
+
     no_chunks = await chunk_model.insert_many_chunks(data_chunks)
 
-    return no_chunks
+    return JSONResponse(
+        
+        content={
+            "message":ResponseEnums.PROCESS_SUCCESS.value,
+            "no of cunks":no_chunks
+        }
+    )
