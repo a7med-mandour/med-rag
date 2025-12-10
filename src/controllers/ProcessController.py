@@ -41,8 +41,8 @@ class ProcessController(BaseController):
     
     def process_data(self, data_content:list, 
                      file_id: str,
-                     chunk_size:int = 100,
-                     overlap:int = 20,
+                     chunk_size:int = 500,
+                     overlap:int = 60,
                      ):
         
         splitter = RecursiveCharacterTextSplitter(
@@ -51,11 +51,11 @@ class ProcessController(BaseController):
                                     length_function=len,
                                 )
         
-        data_content_text = [
+        data_content_text = [ rec.page_content for rec in data_content ]
             
-            rec.page_content
-            for rec in data_content
-        ]
+           
+            
+        
         
         data_content_meta =[
             

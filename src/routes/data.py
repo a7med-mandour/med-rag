@@ -1,6 +1,9 @@
-from fastapi import FastAPI, APIRouter , Depends, UploadFile, status
+from fastapi import FastAPI, APIRouter , Depends, UploadFile, status, Request
 from fastapi.responses import JSONResponse
 from controllers import DataController, ProjectController, ProcessController
+from models.project_model import ProjectModel
+from models.TextChunkModel import TextChunkModel
+from models.db_schema.chunks import DataChunk
 
 import os
 import aiofiles
@@ -15,8 +18,13 @@ data_router = APIRouter(
 )
 
 @data_router.post('/upload/{project_id}')
-async def data_upload(project_id:str , file:UploadFile
+async def data_upload(request:Request,project_id:str , file:UploadFile
                       ):
+    
+    project_model = ProjectModel(db_client=request.app.db_client)
+
+    project = await project_model.get_project_or_create_one(project_id=project_id)
+
     
     data_controller = DataController()
     validate, message = data_controller.validate_data(file=file)
@@ -52,16 +60,22 @@ async def data_upload(project_id:str , file:UploadFile
           
             content={
                 "signal": ResponseEnums.FILE_UPLOADED_SUCCESSFULLY.value,
-                "file_id": file_id
+                "file_id": file_id,
+                "pro": str(project.id)
+                
             }
         )
         
     
 @data_router.post('/process/{project_id}')
-async def data_processing(project_id:str, process_request:DataSchema):
+async def data_processing(request:Request,project_id:str, process_request:DataSchema):
     file_id = process_request.file_id
     chunk_size = process_request.chunk_size
     overlap = process_request.overlap
+
+    project_model = ProjectModel(db_client=request.app.db_client)
+    project = await project_model.get_project_or_create_one(project_id=project_id)
+
 
     process_controller = ProcessController(project_id=project_id)
     
@@ -71,7 +85,7 @@ async def data_processing(project_id:str, process_request:DataSchema):
         data_content,
         file_id,
         chunk_size,
-        overlap
+        overlap=overlap
     )
     
     if chunks is None or len(chunks) == 0 :
@@ -81,5 +95,21 @@ async def data_processing(project_id:str, process_request:DataSchema):
                 'signal':ResponseEnums.NO_CHUNK_FOUND.value
             }
         )
+    
+    data_chunks = [
+         DataChunk(
+             chunk_text = chunk.page_content,
+             metadata= chunk.metadata,
+             chunk_order= i+1,
+             chunk_project_id = project.id
+             
+         )
+         for i, chunk in enumerate(chunks)
+         ]
         
-    return chunks
+
+    chunk_model = TextChunkModel(db_client=request.app.db_client)
+
+    no_chunks = await chunk_model.insert_many_chunks(data_chunks)
+
+    return no_chunks

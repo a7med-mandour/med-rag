@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     ALLOWED_FILE_SIZE: float
     
     FILE_CHUNK_SIZE : int
+
+    MONGO_URL:str
+    MONGO_DATABASE:str
     
     
     class config:

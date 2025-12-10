@@ -20,7 +20,7 @@ export PS1="\[\033[01;32m\]\u@\h:\w\n\[\033[00m\]\$ "
 
 ### For installing all required packages:
 ``` bash
-$ pip install requirments.txt
+$ pip install requirements.txt
 ```
 ### For setup the environmental variables:
  ```bash

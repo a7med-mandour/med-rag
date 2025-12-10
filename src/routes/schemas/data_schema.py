@@ -4,6 +4,6 @@ from typing import Optional
 
 class DataSchema(BaseModel):
     file_id: str
-    chunk_size : Optional[int]=100
-    overlap: Optional[int]=25
+    chunk_size : Optional[int]=300
+    overlap: Optional[int]=20
     
